@@ -11,8 +11,10 @@ import humidity_icon from "../assets/humidity.png";
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
 const Weather = () => {
-  const inputRef = useRef();
-  const [weatherData, setWeatherData] = useState(false);
+  const [weatherData, setWeatherData] = useState({});
+  const [city, setCity] = useState("");
+  const [show, setShow] = useState(true);
+  const [datafound, setDatafound] = useState(false);
 
   const allIcons = {
     "01d": clear_icon,
@@ -31,24 +33,33 @@ const Weather = () => {
     "13n": snow_icon,
   };
 
-  const search = async (city) => {
-    if (city === "") {
-      alert("Enter city Name");
-      return;
+  const handleEnter = (e, city) => {
+    if (e.key === "Enter"&&city.length>=3) {
+      handleSearch(city);
     }
+  };
+
+  const handleSearch = async (city) => {
     try {
       console.log("API KEY:", API_KEY);
 
       const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+
       const response = await fetch(url);
+
       const data = await response.json();
+
+      console.log(data);
       if (!response.ok) {
-        alert(data.message);
+        setWeatherData({
+          message: data.message,
+        });
+        setShow(false);
         return;
       }
-      console.log(data);
 
       const icon = allIcons[data.weather[0].icon] || clear_icon;
+
       setWeatherData({
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,
@@ -56,8 +67,13 @@ const Weather = () => {
         location: data.name,
         icon: icon,
       });
+      console.log(weatherData.humidity);
+
+      setDatafound(true);
+      setShow(true);
     } catch (error) {
-      setWeatherData(false);
+      setShow(false);
+
       console.log("Error in fetching weather data");
     }
   };
@@ -68,37 +84,47 @@ const Weather = () => {
   return (
     <div className="weather">
       <div className="searchbar">
-        <input type="text" ref={inputRef} placeholder="Search" />
-        <img
-          src={search_icon}
-          alt=""
-          onClick={() => search(inputRef.current.value)}
+        <input
+          type="text"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder="Search"
+          onKeyDown={(e) => handleEnter(e, city)}
         />
+        <button onClick={() => handleSearch(city)} disabled={city.length < 3}>
+          <img src={search_icon} alt="Button" />
+        </button>
       </div>
-      {weatherData ? (
-        <>
-          <img src={weatherData.icon} alt="" className="weather_icon" />
-          <p className="temperature">{weatherData.temperature}°c</p>
-          <p className="location">{weatherData.location}</p>
-          <div className="weather-data">
-            <div className="col">
-              <img src={humidity_icon} alt="" />
-              <div>
-                <p>{weatherData.humidity} %</p>
-                <span>Humidity</span>
+      {show ? (
+        datafound ? (
+          <>
+            <img src={weatherData.icon} alt="" className="weather_icon" />
+            <p className="temperature">{weatherData.temperature}°c</p>
+            <p className="location">{weatherData.location}</p>
+            <div className="weather-data">
+              <div className="col">
+                <img src={humidity_icon} alt="" />
+                <div>
+                  <p>{weatherData.humidity} %</p>
+                  <span>Humidity</span>
+                </div>
+              </div>
+              <div className="col">
+                <img src={wind_icon} alt="" />
+                <div>
+                  <p>{weatherData.windSpeed} Km/Hr</p>
+                  <span>WindSpeed</span>
+                </div>
               </div>
             </div>
-            <div className="col">
-              <img src={wind_icon} alt="" />
-              <div>
-                <p>{weatherData.windSpeed} Km/Hr</p>
-                <span>WindSpeed</span>
-              </div>
-            </div>
-          </div>
-        </>
+          </>
+        ) : (
+          <></>
+        )
       ) : (
-        <></>
+        <>
+          <p>{weatherData.message}</p>
+        </>
       )}
     </div>
   );

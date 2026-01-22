@@ -27,7 +27,17 @@
   padding: 15px;
   border-radius: 50px;
   background: #ebfffc;
+}
+.searchbar button {
+  height: 60px;
+  width: 60px;
+  border-radius: 50%;
+  background: #ebfffc;
   cursor: pointer;
+}
+
+.searchbar button:disabled{
+  cursor: not-allowed;
 }
 
 .weather_icon {
